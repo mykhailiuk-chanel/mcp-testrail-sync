@@ -1,0 +1,44 @@
+{
+  "name": "@mcp-testrail-sync/mcp",
+  "version": "0.1.0",
+  "description": "MCP server for TestRail, scoped to one project and one suite: read and create test cases, sections and labels from AI prompts.",
+  "type": "module",
+  "main": "dist/server.js",
+  "bin": {
+    "mcp-testrail-sync": "index.js"
+  },
+  "files": [
+    "index.js",
+    "dist",
+    "README.md",
+    "docs"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "inspect": "npm run build && npx @modelcontextprotocol/inspector node index.js",
+    "prepack": "npm run build"
+  },
+  "keywords": [
+    "mcp",
+    "testrail",
+    "qa",
+    "test-management",
+    "model-context-protocol"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.0"
+  }
+}
