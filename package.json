@@ -31,6 +31,7 @@
     "test-management",
     "model-context-protocol"
   ],
+  "author": "Vitalii Mykhailiuk",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
