@@ -11,11 +11,17 @@
 
 <p align="center">
   <a href="https://www.npmjs.com/package/mcp-testrail-sync"><img src="https://img.shields.io/npm/v/mcp-testrail-sync?label=npm&color=cb3837" alt="npm"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/npm/l/mcp-testrail-sync" alt="license"></a>
-  <a href="https://nodejs.org"><img src="https://img.shields.io/node/v/mcp-testrail-sync" alt="node"></a>
 </p>
 
 A **TestRail MCP server** that lets Claude Code, Claude Desktop, OpenCode, Codex, GitHub Copilot and other AI clients **read and create TestRail test cases from a plain prompt**.
+
+**npm:** https://www.npmjs.com/package/mcp-testrail-sync
+
+**Run it (test build):**
+```bash
+npx -y mcp-testrail-sync@beta --help
+```
+Your MCP client runs this same command for you, see [Quick start](#quick-start).
 
 Works with: Claude Code · Claude Desktop · OpenCode · Codex · VS Code Copilot · any MCP client.
 
