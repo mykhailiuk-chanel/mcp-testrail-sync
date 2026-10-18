@@ -60,6 +60,15 @@ export class TestRailClient {
     return this.request<T>('GET', endpoint, query);
   }
 
+  /** Unpaginated list endpoint (suites, templates, case fields). Accepts a bare array or a wrapper object like `{suites: [...]}`. */
+  async getList<T = unknown>(endpoint: string, key: string): Promise<T[]> {
+    const res = await this.get<Paginated | T[]>(endpoint);
+    if (Array.isArray(res)) return res;
+    if (Array.isArray(res?.[key])) return res[key] as T[];
+    const arrays = Object.values(res ?? {}).filter(Array.isArray);
+    return (arrays.length === 1 ? arrays[0] : []) as T[];
+  }
+
   /** Follows `_links.next` and returns all rows of `key` (e.g. "cases", "sections"). Also accepts legacy plain arrays. */
   async getAll<T = unknown>(endpoint: string, key: string, query: Query = {}): Promise<T[]> {
     const rows: T[] = [];

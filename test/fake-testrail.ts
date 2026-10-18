@@ -47,10 +47,16 @@ export function createFakeTestRail(overrides: Partial<Record<string, (call: Call
       ],
     }),
     'get_project/1': () => ({ id: 1, name: 'Demo', suite_mode: 3 }),
-    'get_suites/1': () => [
-      { id: 10, name: 'Regression', project_id: 1 },
-      { id: 11, name: 'Smoke', project_id: 1 },
-    ],
+    'get_suites/1': () => ({
+      offset: 0,
+      limit: 250,
+      size: 2,
+      _links: { next: null, prev: null },
+      suites: [
+        { id: 10, name: 'Regression', project_id: 1 },
+        { id: 11, name: 'Smoke', project_id: 1 },
+      ],
+    }),
     'get_suite/10': () => ({ id: 10, name: 'Regression', project_id: 1, description: 'Main suite' }),
     'get_templates/1': () => [
       { id: 1, name: 'Test Case (Text)', is_default: true },
