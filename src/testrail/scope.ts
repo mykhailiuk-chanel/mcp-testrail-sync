@@ -56,7 +56,7 @@ export class Scope {
     }
     const project = projectMatches[0];
 
-    const suites = await client.get<Suite[]>(`get_suites/${project.id}`);
+    const suites = await client.getList<Suite>(`get_suites/${project.id}`, 'suites');
     const suiteMatches = matchByIdOrName(suites, config.suite);
     if (suiteMatches.length === 0) {
       const names = suites.map((s) => `"${s.name}" (id ${s.id})`).join(', ');
@@ -132,8 +132,8 @@ function appliesToProject(field: CaseField, projectId: number) {
 export async function detectCaseFormat(client: TestRailClient, projectId: number): Promise<CaseFormat> {
   try {
     const [templates, fields] = await Promise.all([
-      client.get<Template[]>(`get_templates/${projectId}`),
-      client.get<CaseField[]>('get_case_fields'),
+      client.getList<Template>(`get_templates/${projectId}`, 'templates'),
+      client.getList<CaseField>('get_case_fields', 'case_fields'),
     ]);
 
     const activeFields = fields.filter((f) => f.is_active && appliesToProject(f, projectId).length > 0);
