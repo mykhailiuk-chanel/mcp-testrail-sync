@@ -2,7 +2,7 @@
 
 Every client needs the same four values plus `--project`. Only the file format changes.
 
-> **About the path `node_modules/@mcp-testrail-sync/mcp/index.js`:** it is relative, so it works when the client starts from your project folder. That is true for project-level configs (Claude Code `.mcp.json`, OpenCode `opencode.json`, VS Code `.vscode/mcp.json`). For global configs (Claude Desktop, Codex), use an **absolute path**.
+> **How it runs:** every config below starts the server with `npx -y mcp-testrail-sync`, so there is nothing to install first. The first start downloads the package. While it is a test build, use `mcp-testrail-sync@beta` instead of `mcp-testrail-sync` in the args.
 
 > **Secrets:** don't commit your API key. Where the client supports it, read the key from your shell environment or a prompt instead (examples below).
 
@@ -17,7 +17,7 @@ claude mcp add mcp-testrail-sync \
   -e TESTRAIL_USERNAME=your-email@example.com \
   -e TESTRAIL_API_KEY=your-api-key \
   -e TESTRAIL_SUITE=test1 \
-  -- node node_modules/@mcp-testrail-sync/mcp/index.js --project demo-name
+  -- npx -y mcp-testrail-sync --project demo-name
 ```
 
 **Option B: shared with the team** (`.mcp.json` in the repo root). `${VAR}` is read from each person's shell, so the key never lands in git:
@@ -25,8 +25,8 @@ claude mcp add mcp-testrail-sync \
 {
   "mcpServers": {
     "mcp-testrail-sync": {
-      "command": "node",
-      "args": ["node_modules/@mcp-testrail-sync/mcp/index.js", "--project", "demo-name"],
+      "command": "npx",
+      "args": ["-y", "mcp-testrail-sync", "--project", "demo-name"],
       "env": {
         "TESTRAIL_URL": "https://your-instance.testrail.io",
         "TESTRAIL_USERNAME": "${TESTRAIL_USERNAME}",
@@ -46,8 +46,8 @@ File: `~/Library/Application Support/Claude/claude_desktop_config.json` (macOS) 
 {
   "mcpServers": {
     "mcp-testrail-sync": {
-      "command": "node",
-      "args": ["/ABSOLUTE/PATH/node_modules/@mcp-testrail-sync/mcp/index.js", "--project", "demo-name"],
+      "command": "npx",
+      "args": ["-y", "mcp-testrail-sync", "--project", "demo-name"],
       "env": {
         "TESTRAIL_URL": "https://your-instance.testrail.io",
         "TESTRAIL_USERNAME": "your-email@example.com",
@@ -68,7 +68,7 @@ File: `opencode.json` in the project. Note that OpenCode calls the env block **`
   "mcp": {
     "mcp-testrail-sync": {
       "type": "local",
-      "command": ["node", "node_modules/@mcp-testrail-sync/mcp/index.js", "--project", "demo-name"],
+      "command": ["npx", "-y", "mcp-testrail-sync", "--project", "demo-name"],
       "enabled": true,
       "environment": {
         "TESTRAIL_URL": "https://your-instance.testrail.io",
@@ -86,8 +86,8 @@ File: `opencode.json` in the project. Note that OpenCode calls the env block **`
 File: `~/.codex/config.toml`
 ```toml
 [mcp_servers.mcp-testrail-sync]
-command = "node"
-args = ["/ABSOLUTE/PATH/node_modules/@mcp-testrail-sync/mcp/index.js", "--project", "demo-name"]
+command = "npx"
+args = ["-y", "mcp-testrail-sync", "--project", "demo-name"]
 
 [mcp_servers.mcp-testrail-sync.env]
 TESTRAIL_URL = "https://your-instance.testrail.io"
@@ -107,8 +107,8 @@ File: `.vscode/mcp.json`. VS Code asks for the API key once and stores it secure
   "servers": {
     "mcp-testrail-sync": {
       "type": "stdio",
-      "command": "node",
-      "args": ["node_modules/@mcp-testrail-sync/mcp/index.js", "--project", "demo-name"],
+      "command": "npx",
+      "args": ["-y", "mcp-testrail-sync", "--project", "demo-name"],
       "env": {
         "TESTRAIL_URL": "https://your-instance.testrail.io",
         "TESTRAIL_USERNAME": "your-email@example.com",

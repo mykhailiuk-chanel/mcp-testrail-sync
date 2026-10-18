@@ -1,9 +1,9 @@
-# How to publish `@mcp-testrail-sync/mcp` to npm
+# How to publish `mcp-testrail-sync` to npm
 
 A first-time guide. Follow it top to bottom. Nothing here publishes anything until step 7.
 
 **Current state (checked when this guide was written):**
-- The package name `@mcp-testrail-sync/mcp` returned 404 on the registry, so the name is **not taken** (a scope can still be reserved by someone else, so step 2 confirms it).
+- The package name `mcp-testrail-sync` returned 404 on the registry, so the name is **not taken** (a scope can still be reserved by someone else, so step 2 confirms it).
 - This machine is **not logged in** to npm.
 - The git repo has **no remote** yet.
 
@@ -11,8 +11,8 @@ A first-time guide. Follow it top to bottom. Nothing here publishes anything unt
 
 ## 0. Key concepts (2 minutes)
 
-- **Scope:** `@mcp-testrail-sync/...` means the package lives under the scope (namespace) `mcp-testrail-sync`. On npm a scope is either a **user** name or an **organization** name. You need to own it before you can publish into it.
-- **Scoped packages are private by default.** Private packages need a paid plan, so the first publish needs `--access public` (or `publishConfig.access = "public"`, see step 3).
+- **Unscoped name:** the package is published as `mcp-testrail-sync` (no `@scope/`), so no npm organization is needed. The first user to publish a name owns it.
+- **Beta tag:** test builds use a pre-release version and `--tag beta`, so they never become the default `npm install` version.
 - **Versions are permanent.** You can never publish the same version twice, even after unpublishing. Fix mistakes by publishing a new version.
 - **`dist/` is not in git** (see `.gitignore`), but it must be in the package. The `prepack` script builds it automatically before `npm publish` / `npm pack`.
 
@@ -23,13 +23,13 @@ A first-time guide. Follow it top to bottom. Nothing here publishes anything unt
 1. Sign up at https://www.npmjs.com/signup and verify your email.
 2. Turn on two-factor authentication: **Account → Two-Factor Authentication → Enable**. Choose "Authorization and publishing". npm requires 2FA for publishing.
 
-## 2. Create the organization (this gives you the `@mcp-testrail-sync` scope)
+## 2. Check the name is free
 
-1. https://www.npmjs.com/org/create
-2. Name: `mcp-testrail-sync`. Choose the **free plan** (unlimited **public** packages).
-3. If the name is taken, either pick another org name or publish under your user scope, e.g. `@your-npm-username/mcp-testrail-sync`. In that case you must also change:
-   - `package.json` → `name`
-   - the path in `README.md`, `docs/CLIENTS.md`, `examples/` and the article (search for `@mcp-testrail-sync/mcp`)
+```bash
+npm view mcp-testrail-sync     # E404 means the name is available
+```
+
+If it was taken in the meantime, pick another name and change it in `package.json`, `README.md`, `docs/CLIENTS.md` and `examples/`.
 
 ## 3. Prepare `package.json`
 
@@ -45,7 +45,7 @@ Add these fields (they are not there yet):
 }
 ```
 
-Already set and correct: `name`, `version` (`0.1.0`), `description`, `type: module`, `bin` (`mcp-testrail-sync` → `index.js`), `files`, `engines` (Node ≥ 20), `license`, `keywords`, `prepack`.
+`package.json` already has `repository`, `homepage`, `bugs` and `publishConfig` for `mykhailiuk-chanel/mcp-testrail-sync`. Already set and correct: `name`, `version`, `description`, `type: module`, `bin` (`mcp-testrail-sync` → `index.js`), `files`, `engines` (Node ≥ 20), `license`, `keywords`, `prepack`.
 
 > **Version number tip:** keep `0.x` while it's a PoC. Use `0.1.0` for the first release. Semver for `0.x`: breaking change → bump the minor (`0.2.0`), fix → bump the patch (`0.1.1`).
 
@@ -77,11 +77,11 @@ Check the file list. You should see `index.js`, `dist/**`, `README.md`, `LICENSE
 Then test the real package the way a user will get it, in a **separate empty folder**:
 
 ```bash
-npm pack                              # creates mcp-testrail-sync-mcp-0.1.0.tgz
+npm pack                              # creates mcp-testrail-sync-0.1.0.tgz
 mkdir /tmp/try-mcp && cd /tmp/try-mcp
 npm init -y
-npm install /path/to/mcp-testrail-sync-mcp-0.1.0.tgz
-node node_modules/@mcp-testrail-sync/mcp/index.js --help
+npm install /path/to/mcp-testrail-sync-0.1.0.tgz
+node node_modules/mcp-testrail-sync/index.js --help
 ```
 
 `--help` should print the usage text. Running without config should print the list of missing settings (and exit with code 1). This confirms that the exact path from your MCP config works. Delete the `.tgz` file afterwards (it is in `.gitignore`).
@@ -118,20 +118,20 @@ npm publish --access public
 ```bash
 # set "version": "0.1.0-beta.1" in package.json
 npm publish --access public --tag beta
-# users install it with: npm install @mcp-testrail-sync/mcp@beta
+# users install it with: npm install mcp-testrail-sync@beta
 ```
 
 ## 8. Verify the published package
 
 ```bash
-npm view @mcp-testrail-sync/mcp            # shows version, files, dist-tags
+npm view mcp-testrail-sync            # shows version, files, dist-tags
 mkdir /tmp/try-npm && cd /tmp/try-npm && npm init -y
-npm install @mcp-testrail-sync/mcp
-node node_modules/@mcp-testrail-sync/mcp/index.js --help
-npx -y @mcp-testrail-sync/mcp --help       # also works through the "bin" entry
+npm install mcp-testrail-sync
+node node_modules/mcp-testrail-sync/index.js --help
+npx -y mcp-testrail-sync --help       # also works through the "bin" entry
 ```
 
-The page appears at https://www.npmjs.com/package/@mcp-testrail-sync/mcp (the README shown there is the one in the package, and it can take a few minutes).
+The page appears at https://www.npmjs.com/package/mcp-testrail-sync (the README shown there is the one in the package, and it can take a few minutes).
 
 Tag the release in git too:
 
@@ -193,14 +193,14 @@ If you use a token instead, add `env: NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`
 
 | Problem | Fix |
 |---|---|
-| `E403 ... You do not have permission to publish "@mcp-testrail-sync/mcp"` | The scope isn't yours. Create the org (step 2) or check `npm whoami` and your membership in the org |
-| `E402 You must sign up for private packages` | A scoped package is private by default. Add `--access public` / `publishConfig.access` |
+| `E403 ... You do not have permission to publish "mcp-testrail-sync"` | The name is owned by someone else, or you are logged in as the wrong user. Check `npm whoami` |
+| `E402 You must sign up for private packages` | Only happens for scoped names. Add `--access public` / `publishConfig.access` |
 | `E403 ... cannot publish over the previously published versions` | That version already exists. Bump the version (`npm version patch`) |
 | `EOTP` / one-time password required | Add your 2FA code: `npm publish --otp=123456` |
 | `ENEEDAUTH` | Run `npm login` |
 | `E404` on `npm install` right after publishing | Wait a minute and retry. The registry cache can lag |
 | Package is missing `dist/` | `prepack` didn't run. Run `npm run build` and check `npm pack --dry-run` |
-| Published a broken version | Publish a fixed one right away (`npm version patch`). Then `npm deprecate @mcp-testrail-sync/mcp@0.1.0 "broken, use 0.1.1"` |
+| Published a broken version | Publish a fixed one right away (`npm version patch`). Then `npm deprecate mcp-testrail-sync@0.1.0 "broken, use 0.1.1"` |
 
 **Unpublishing:** npm only allows `npm unpublish` within 72 hours of publishing (or if nobody depends on it), and the version number can **never be reused**. Prefer `npm deprecate`.
 
