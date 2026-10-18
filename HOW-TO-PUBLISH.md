@@ -1,11 +1,32 @@
 # How to publish `mcp-testrail-sync` to npm
 
-A first-time guide. Follow it top to bottom. Nothing here publishes anything until step 7.
+A first-time guide. Follow it top to bottom. Steps 1-8 are already done for `0.1.0-beta.1`; the checklist below shows what is left. Re-use the guide for later releases.
 
-**Current state (checked when this guide was written):**
-- The package name `mcp-testrail-sync` returned 404 on the registry, so the name is **not taken** (a scope can still be reserved by someone else, so step 2 confirms it).
-- This machine is **not logged in** to npm.
-- The git repo has **no remote** yet.
+## Checklist (status on 2026-10-18)
+
+### Done
+- [x] Name `mcp-testrail-sync` was free on npm; package renamed from `@mcp-testrail-sync/mcp` to the unscoped name
+- [x] npm account with 2FA ("Authorization and publishing"); `npm login` works
+- [x] `package.json`: `repository`, `homepage`, `bugs`, `publishConfig`, keywords, description
+- [x] Code on GitHub (`mykhailiuk-chanel/mcp-testrail-sync`), merged to `main`
+- [x] README: centered header, badges, example prompts, screenshot, `npx` configs for every client
+- [x] Pre-publish checks passed (typecheck, 36 tests, `npm pack --dry-run`)
+- [x] Published `0.1.0-beta.1` (tags `beta` and `latest`): https://www.npmjs.com/package/mcp-testrail-sync
+- [x] Verified: `npm view` and `npx -y mcp-testrail-sync@beta --help` work from a clean folder
+- [x] Local git tag `v0.1.0-beta.1` created
+
+### To do
+- [ ] Push the tag: `git push origin v0.1.0-beta.1` (it is only local so far)
+- [ ] GitHub topics: `mcp`, `mcp-server`, `testrail`, `qa`, `claude`, `opencode` (repo page → About → gear icon)
+- [ ] Team testing with Claude Code / OpenCode against a **sandbox** TestRail project; collect feedback
+- [ ] Fix the stale usage text in `src/cli.ts` (`--help` still shows `node node_modules/@mcp-testrail-sync/mcp/index.js`); it should say `npx -y mcp-testrail-sync --project <name|id>`. Needs a new version: `0.1.0-beta.2`
+- [ ] Add more screenshots (`02-client-config`, `03-system-ping`, `04-create-from-md`) to `docs/screenshots/` and link them in the README
+- [ ] Add `CHANGELOG.md` (one section per version) and start filling it from `0.1.0-beta.2`
+- [ ] Add the GitHub Action for publishing on Release (see the last section) once the first publish is proven; configure Trusted Publisher on npmjs.com
+- [ ] After feedback: release `0.1.0` stable and move `latest` to it. Right now `latest` still points to the beta
+- [ ] Optional: list on the MCP Registry and awesome-mcp-servers lists
+
+Not needed for beta testing: the GitHub Action and the changelog. Both can wait until after feedback.
 
 ---
 
