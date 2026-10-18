@@ -1,7 +1,7 @@
 {
-  "name": "@mcp-testrail-sync/mcp",
-  "version": "0.1.0",
-  "description": "MCP server for TestRail, scoped to one project and one suite: read and create test cases, sections and labels from AI prompts.",
+  "name": "mcp-testrail-sync",
+  "version": "0.1.0-beta.1",
+  "description": "MCP server for TestRail: create and read test cases, sections and labels from prompts in Claude, OpenCode, Codex or Copilot. One project, one suite, no update or delete.",
   "type": "module",
   "main": "dist/server.js",
   "bin": {
@@ -26,13 +26,34 @@
   },
   "keywords": [
     "mcp",
+    "mcp-server",
+    "model-context-protocol",
     "testrail",
-    "qa",
+    "test-case",
+    "test-cases",
     "test-management",
-    "model-context-protocol"
+    "qa",
+    "testing",
+    "claude",
+    "claude-code",
+    "opencode",
+    "codex",
+    "copilot",
+    "ai"
   ],
   "author": "Vitalii Mykhailiuk",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mykhailiuk-chanel/mcp-testrail-sync.git"
+  },
+  "homepage": "https://github.com/mykhailiuk-chanel/mcp-testrail-sync#readme",
+  "bugs": {
+    "url": "https://github.com/mykhailiuk-chanel/mcp-testrail-sync/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.32.1",
     "zod": "^4.0.0"
