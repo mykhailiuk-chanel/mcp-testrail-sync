@@ -76,12 +76,34 @@ Works with: Claude Code · Claude Desktop · OpenCode · Codex · VS Code Copilo
    Configs for **Claude Desktop, Codex and VS Code Copilot** are in [docs/CLIENTS.md](docs/CLIENTS.md).
 4. Restart the client and ask: *"Run system_ping from mcp-testrail-sync"*. You should see your project and suite.
 
-<!-- Further screenshots: add the PNG to docs/screenshots/, then add a link in the same absolute raw.githubusercontent.com form as the one at the top (npm needs absolute URLs).
-- `01-testrail-api-key.png`: where to create the API key in TestRail
-- `02-client-config.png`: the MCP config in your client
-- `03-system-ping.png`: a successful `system_ping`
-- `04-create-from-md.png`: prompt + created cases in TestRail
--->
+## See it in action (OpenCode)
+
+**1. Add the server to `opencode.json`** (inside `.opencode/` or the project root):
+
+<p align="center">
+  <img src="./docs/screenshots/02-opencode-config-example.png" alt="OpenCode config for mcp-testrail-sync" width="600">
+</p>
+
+**2. Ask in plain language.** A read-only prompt to try first:
+
+```text
+Use the testrail MCP server.
+1. Run system_ping and show me the locked project
+2. Show the section tree of the suite.
+3. List 3 test cases from the suite - subsection `Suite Test`. For each one show the id, title, section path and priority.
+```
+
+> Replace `Suite Test` with a section name from your own suite.
+
+<p align="center">
+  <img src="./docs/screenshots/03-user-prompt-example.png" alt="Prompt and MCP tool calls in OpenCode" width="600">
+</p>
+
+**3. Get the answer from TestRail.** The client calls `system_ping`, `suites_list` and `tests_list` for you and shows the result:
+
+<p align="center">
+  <img src="./docs/screenshots/04-ai-response-example.png" alt="AI response with project, section tree and test cases" width="600">
+</p>
 
 ## Configuration
 
