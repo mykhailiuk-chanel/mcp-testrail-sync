@@ -120,7 +120,7 @@ Everything lives in the MCP client config: no `.env` files.
 
 If something is missing or wrong, the server stops at startup and lists every problem, e.g. `TESTRAIL_API_KEY is required (TestRail > My Settings > API Keys)`, or `Suite "test2" not found in project "demo-name". Available: "test1" (id 34), ...`.
 
-## Tools (v1)
+## Tools
 
 | Tool | What it does |
 |---|---|
@@ -136,6 +136,13 @@ If something is missing or wrong, the server stops at startup and lists every pr
 | `suites_search` | Finds sections in the suite by name and returns their paths |
 | `labels_list` | Lists project labels (TestRail 10.5+) |
 | `labels_get` | Gets a label by id or title |
+| `runs_list` | **The reporting tool.** All runs of the suite (standalone and inside plans) with counts per status, plus totals. Filter by `from`/`to` date window, `state` (open / completed / all), milestone, name; `group_by: "milestone"` gives a progress table |
+| `runs_get` | One run with its tests: by default the failed / blocked / retest ones, with latest comment and defects (`123` or `R123`) |
+| `milestones_list` | Lists milestones with state and dates; filter by state, date window, name |
+
+**Paging:** `tests_list`, `runs_list`, `runs_get` and `milestones_list` all use the same shape: `count, offset, limit, has_more, next_offset`. For `runs_list` the totals always cover every matched run, not only the page. The response also has a `scan` block (what was read) and `warnings` if anything was cut short.
+
+**Progress reports are read-only and stay inside the configured suite.** Runs of other suites (also inside plans) are ignored. `from`/`to` match runs that were active at any time in the window (created before `to`, and still open or completed after `from`). Every summary has `total, passed, failed, blocked, retest, untested, custom` (e.g. "Skipped"), `executed_pct`, `pass_rate_pct` (passed / total) and `pass_rate_of_executed_pct`.
 
 **How steps are sent:** at startup the server checks the project's templates.
 - If the project has the *Test Case (Steps)* template, steps go in as separated steps (one row per step, each with its expected result).

@@ -9,6 +9,9 @@ describe('tool registry', () => {
       [
         "labels_get",
         "labels_list",
+        "milestones_list",
+        "runs_get",
+        "runs_list",
         "sections_create",
         "sections_list",
         "suites_get",
@@ -41,7 +44,8 @@ describe('system_ping', () => {
     expect(data.scope.project).toMatchObject({ id: 1, name: 'Demo', suite_mode: 'multiple suites' });
     expect(data.scope.suite).toEqual({ id: 10, name: 'Regression' });
     expect(data.case_format.required_fields).toEqual(['custom_automation']);
-    expect(data.tools).toHaveLength(12);
+    expect(data.tools).toHaveLength(15);
+    expect(data.statuses).toContainEqual({ id: 5, label: 'Failed' });
   });
 });
 
@@ -231,5 +235,142 @@ describe('labels_*', () => {
     const { isError, data } = await call('labels_list');
     expect(isError).toBe(true);
     expect(data.error).toMatch(/requires TestRail 10.5/);
+  });
+});
+
+
+describe('runs and milestones (progress reports)', () => {
+  it('runs_list returns standalone + plan runs of the suite with totals; other suites are excluded', async () => {
+    const { call, fake } = await startTestServer();
+    const { data } = await call('runs_list', { milestone_id: 50 });
+    expect(fake.calls.find((c) => c.endpoint.startsWith('get_runs'))!.query).toMatchObject({ suite_id: '10', milestone_id: '50' });
+    expect(data.runs.map((r: any) => r.id).sort()).toEqual([700, 702]);
+    expect(data.runs.find((r: any) => r.id === 702).plan_name).toBe('Release plan');
+    // run 700: 10 tests, plan run 702: 5 tests (incl. 1 custom "Skipped")
+    expect(data.totals).toMatchObject({ total: 15, passed: 8, failed: 2, blocked: 1, untested: 3, custom: { Skipped: 1 } });
+    expect(data.runs.find((r: any) => r.id === 700).summary).toMatchObject({ executed: 9, executed_pct: 90, pass_rate_pct: 60 });
+  });
+
+  it('runs_list date window: open runs stay in, runs completed before "from" drop out', async () => {
+    const { call, fake } = await startTestServer();
+    // window Nov 2023: run 700 (open, created 2023-11-14) matches; run 704 (completed Jul 2023) does not
+    const nov = await call('runs_list', { from: '2023-11-01', to: '2023-11-30' });
+    expect(nov.data.runs.map((r: any) => r.id)).toContain(700);
+    expect(nov.data.runs.map((r: any) => r.id)).not.toContain(704);
+    // bare "to" date covers the whole day
+    expect(fake.calls.find((c) => c.endpoint.startsWith('get_runs'))!.query.created_before).toBe(String(Math.floor(Date.parse('2023-11-30') / 1000) + 86399));
+    // window July 2023: only the old completed run
+    const jul = await call('runs_list', { from: '2023-07-01', to: '2023-07-31' });
+    expect(jul.data.runs.map((r: any) => r.id)).toEqual([704]);
+  });
+
+  it('runs_list state filters completed vs open runs', async () => {
+    const { call } = await startTestServer();
+    expect((await call('runs_list', { state: 'completed' })).data.runs.map((r: any) => r.id)).toEqual([704]);
+    const open = (await call('runs_list', { state: 'open' })).data.runs.map((r: any) => r.id).sort();
+    expect(open).toEqual([700, 702]);
+  });
+
+  it('runs_list group_by milestone gives a progress table; include_runs=false returns numbers only', async () => {
+    const { call } = await startTestServer();
+    const { data } = await call('runs_list', { group_by: 'milestone', include_runs: false });
+    expect(data.runs).toBeUndefined();
+    const m50 = data.by_milestone.find((g: any) => g.milestone_id === 50);
+    expect(m50).toMatchObject({ milestone: 'Release 1.0', runs_count: 2 });
+    expect(m50.summary.total).toBe(15);
+    expect(data.by_milestone.find((g: any) => g.milestone_id === 51).summary.failed).toBe(1);
+  });
+
+  it('runs_list search_text matches run or plan name', async () => {
+    const { call } = await startTestServer();
+    expect((await call('runs_list', { search_text: 'sprint' })).data.runs.map((r: any) => r.id)).toEqual([700]);
+    expect((await call('runs_list', { search_text: 'release plan' })).data.runs.map((r: any) => r.id)).toEqual([702]);
+  });
+
+  it('runs_get lists failed/blocked tests with the NEWEST comment by default', async () => {
+    const { call, fake } = await startTestServer();
+    const { data } = await call('runs_get', { run_id: 'R700' });
+    expect(fake.calls.find((c) => c.endpoint.startsWith('get_tests'))!.query.status_id).toBe('5,2,4');
+    expect(data.run.summary.failed).toBe(2);
+    expect(data.tests.map((t: any) => t.case_id)).toEqual([500, 502]);
+    expect(data.tests[0]).toMatchObject({ status: 'Failed', last_comment: 'newest failure', defects: 'BUG-1' });
+  });
+
+  it('runs_get accepts status names, rejects unknown ones and runs of another suite', async () => {
+    const { call, fake } = await startTestServer();
+    await call('runs_get', { run_id: 700, status: ['Passed'], include_comments: false });
+    expect(fake.calls.at(-1)!.query.status_id).toBe('1');
+    expect((await call('runs_get', { run_id: 700, status: ['nope'] })).data.error).toMatch(/Unknown status/);
+    const other = await call('runs_get', { run_id: 701 });
+    expect(other.isError).toBe(true);
+    expect(other.data.error).toMatch(/another suite/);
+  });
+
+  it('milestones_list filters by state, window and name', async () => {
+    const { call } = await startTestServer();
+    expect((await call('milestones_list')).data.milestones.map((m: any) => m.id)).toEqual([51, 50]);
+    expect((await call('milestones_list', { state: 'open' })).data.milestones.map((m: any) => m.id)).toEqual([50]);
+    expect((await call('milestones_list', { search_text: '0.9' })).data.milestones.map((m: any) => m.id)).toEqual([51]);
+    // 51 is due 2023-11-14, 50 is due 2027 -> window Nov 2023 keeps only 51 (50 has no start date, so it is kept too)
+    const win = await call('milestones_list', { from: '2028-01-01' });
+    expect(win.data.milestones).toHaveLength(0);
+  });
+
+  it('runs_list pages over run rows while totals still cover every matched run', async () => {
+    const { call } = await startTestServer();
+    const p1 = (await call('runs_list', { limit: 2 })).data;
+    expect(p1).toMatchObject({ matched: 3, count: 2, offset: 0, limit: 2, has_more: true, next_offset: 2 });
+    expect(p1.totals.total).toBe(25); // 10 + 5 + 10, not just the 2 rows on the page
+    const p2 = (await call('runs_list', { limit: 2, offset: p1.next_offset })).data;
+    expect(p2).toMatchObject({ count: 1, has_more: false });
+    expect(p2.next_offset).toBeUndefined();
+    expect([...p1.runs, ...p2.runs].map((r: any) => r.id).sort()).toEqual([700, 702, 704]);
+  });
+
+  it('runs_list reports what it scanned', async () => {
+    const { data } = await (await startTestServer()).call('runs_list', { include_runs: false });
+    expect(data.scan).toEqual({ standalone_runs: 2, plans_found: 1, plans_opened: 1 });
+    expect(data.has_more).toBeUndefined();
+  });
+
+  it('runs_list warns when plans were not all opened', async () => {
+    const { data } = await (await startTestServer()).call('runs_list', { max_plans: 1, milestone_id: 50 });
+    expect(data.warnings).toBeUndefined(); // 1 plan, 1 opened: complete
+    const fake = await startTestServer(undefined, {
+      'get_plans/1': () => ({ _links: { next: null }, plans: [{ id: 800, name: 'a', project_id: 1 }, { id: 800, name: 'b', project_id: 1 }] }),
+    });
+    const res = await fake.call('runs_list', { max_plans: 1 });
+    expect(res.data.warnings[0]).toMatch(/Only 1 of 2 test plans/);
+  });
+
+  it('runs_list warns when TestRail has more rows than the safety limit', async () => {
+    // every page claims there is a next page -> the client hits its page cap
+    const { call } = await startTestServer(undefined, {
+      'get_runs/1': () => ({ _links: { next: 'more' }, runs: [{ id: 700, name: 'x', suite_id: 10, project_id: 1 }] }),
+    });
+    const { data } = await call('runs_list', { include_runs: false });
+    expect(data.warnings.join(' ')).toMatch(/more than 10,000/);
+  });
+
+  it('milestones_list is paged', async () => {
+    const { call } = await startTestServer();
+    const p1 = (await call('milestones_list', { limit: 1 })).data;
+    expect(p1).toMatchObject({ matched: 2, count: 1, limit: 1, has_more: true, next_offset: 1 });
+    expect(p1.milestones[0].id).toBe(51);
+    const p2 = (await call('milestones_list', { limit: 1, offset: 1 })).data;
+    expect(p2.milestones[0].id).toBe(50);
+    expect(p2.has_more).toBe(false);
+  });
+
+  it('runs_get is paged and echoes limit', async () => {
+    const { data } = await (await startTestServer()).call('runs_get', { run_id: 700, limit: 1 });
+    expect(data).toMatchObject({ count: 2, offset: 0, limit: 1 });
+  });
+
+  it('report tools never write', async () => {
+    const { call, fake } = await startTestServer();
+    await call('runs_list', { group_by: 'milestone' });
+    await call('runs_get', { run_id: 700 });
+    expect(fake.calls.every((c) => c.method === 'GET')).toBe(true);
   });
 });
