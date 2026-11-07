@@ -6,6 +6,7 @@
 | **2** | Publish: GitHub (public repo), then npm (following `HOW-TO-PUBLISH.md`) | Next |
 | **3** | Verify against a real TestRail: API key, GET requests, then writes | Todo |
 | **4** | Team feedback, screenshots, article | Todo |
+| **4b** | Beta `0.1.0-beta.3`: test runs, milestones and progress reports (`runs_list`, `runs_get`, `milestones_list`) | Ready to publish |
 | **5** | v2 | Backlog |
 
 > **Heads-up on the order:** everything in Step 1 was tested against a **mock** TestRail. If Step 2 happens before Step 3, publish to npm as a **beta** (`0.1.0-beta.1`, `--tag beta`), so nobody gets an unverified build as the default `npm install`. Cut the stable `0.1.0` after Step 3.
@@ -99,6 +100,30 @@ Do all of this in a **sandbox** project, never in a real team project.
 
 ---
 
+## Step 4b: Progress reports (`0.1.0-beta.3`)
+
+**Result:** read-only tools to scan test runs and milestones for a team progress report. 15 tools in total (12 + 3).
+
+- `runs_list`: all runs of the suite (standalone and inside plans) with counts per status (passed, failed, blocked, retest, untested, custom), execution % and pass rate, plus totals. Filters: `from`/`to` date window (runs active at any time in it), `state` (open / completed / all), `milestone_id`, `search_text`. `group_by: "milestone"` gives a progress table; `include_runs: false` returns numbers only.
+- `runs_get`: one run with its failed / blocked / retest tests (or any statuses you pass) and the latest comment and defects.
+- `milestones_list`: milestones with state and dates; filter by state, window, name.
+- Result statuses are shown in `system_ping`.
+- Same paging shape everywhere (`count, offset, limit, has_more, next_offset`); `scan` block and `warnings` in `runs_list`.
+- Still locked to one project and one suite: runs of other suites (also inside plans) are ignored. No new write tools.
+- Tests: 51 passing, against the fake TestRail.
+
+### Verify on a real TestRail (before the stable release)
+- [ ] `runs_list` with a small `from`/`to` window, then with no window (how slow is a full-history scan?).
+- [ ] `runs_list` on a project with test plans: do plan runs show up with `plan_name`, and do the totals match the TestRail UI?
+- [ ] `group_by: "milestone"` totals match the milestone page in TestRail.
+- [ ] `state: "open"` vs `"completed"` and the window edges (a run completed on the `from` day, a run created on the `to` day).
+- [ ] `runs_get` on a run with many results (the comment lookup reads the whole result history of the run).
+- [ ] Custom statuses (e.g. "Skipped") appear under `custom`.
+- [ ] Check `get_runs`, `get_plans`, `get_plan`, `get_milestones`, `get_tests`, `get_results_for_run` responses on your TestRail version (wrapped or plain arrays, `created_before` filter).
+- [ ] Known limits: user ids are not resolved to names (a `users_list` tool is in the backlog); at most 50 plans are opened per call (`max_plans`).
+
+---
+
 ## Step 4: Team feedback and the article
 
 - [ ] Collect feedback from the team: real prompts, missing tools, confusing setup steps.
@@ -117,7 +142,9 @@ Ideas in rough priority order. Nothing here is committed to.
 - [ ] Retry with backoff on 429 / 5xx.
 - [ ] `tests_update` / `tests_delete` with confirmation (breaks the "no update/delete" safety test on purpose).
 - [ ] `suites_create` (needs a decision on the scope lock).
-- [ ] Test runs, plans and results.
+- [ ] Writing runs and results: `runs_create`, `results_add` (needs a decision on the "no update" safety rule). Reading runs and milestones is done in `0.1.0-beta.3`.
+- [ ] `users_list`, to show assignee / author names instead of ids in reports.
+- [ ] Report extras: trend between two dates, flaky tests (many status changes), a markdown report template.
 - [ ] Lookup tools for case fields, priorities and types, so the AI can find valid ids without guessing.
 - [ ] Attachments, shared steps, BDD scenarios.
 - [ ] GitHub Actions: CI (`npm test`) and publish on release with provenance (`HOW-TO-PUBLISH.md`).

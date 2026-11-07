@@ -2,7 +2,7 @@
 
 A first-time guide. Follow it top to bottom. Steps 1-8 are already done for `0.1.0-beta.1`; the checklist below shows what is left. Re-use the guide for later releases.
 
-## Checklist (status on 2026-10-18)
+## Checklist (status on 2026-11-07)
 
 ### Done
 - [x] Name `mcp-testrail-sync` was free on npm; package renamed from `@mcp-testrail-sync/mcp` to the unscoped name
@@ -13,15 +13,26 @@ A first-time guide. Follow it top to bottom. Steps 1-8 are already done for `0.1
 - [x] Pre-publish checks passed (typecheck, 36 tests, `npm pack --dry-run`)
 - [x] Published `0.1.0-beta.1` (tags `beta` and `latest`): https://www.npmjs.com/package/mcp-testrail-sync
 - [x] Verified: `npm view` and `npx -y mcp-testrail-sync@beta --help` work from a clean folder
+- [x] Published `0.1.0-beta.2` (tag `beta`; `latest` still points to `0.1.0-beta.1`)
 - [x] Local git tag `v0.1.0-beta.1` created
+
+### Next release: `0.1.0-beta.3` (runs and milestones tools)
+- [x] Code committed on branch `mcp-beta-testing-v0.4`; `package.json` and `package-lock.json` are at `0.1.0-beta.3`
+- [ ] PR merged into `main`
+- [ ] `npm ci && npm test && npm run build && npm publish --dry-run --tag beta`
+- [ ] `npm publish --access public --tag beta`
+- [ ] Verify `npm view mcp-testrail-sync dist-tags` shows `beta: 0.1.0-beta.3`
+- [ ] Tag and push: `git tag v0.1.0-beta.3 && git push origin v0.1.0-beta.3`
+
+Short recipe for every later beta: see **"Publishing the next beta"** at the end of this file.
 
 ### To do
 - [ ] Push the tag: `git push origin v0.1.0-beta.1` (it is only local so far)
 - [ ] GitHub topics: `mcp`, `mcp-server`, `testrail`, `qa`, `claude`, `opencode` (repo page → About → gear icon)
 - [ ] Team testing with Claude Code / OpenCode against a **sandbox** TestRail project; collect feedback
-- [ ] Fix the stale usage text in `src/cli.ts` (`--help` still shows `node node_modules/@mcp-testrail-sync/mcp/index.js`); it should say `npx -y mcp-testrail-sync --project <name|id>`. Needs a new version: `0.1.0-beta.2`
+- [ ] Check the usage text in `src/cli.ts` (`--help` must say `npx -y mcp-testrail-sync --project <name|id>`, not `node node_modules/@mcp-testrail-sync/mcp/index.js`)
 - [ ] Add more screenshots (`02-client-config`, `03-system-ping`, `04-create-from-md`) to `docs/screenshots/` and link them in the README
-- [ ] Add `CHANGELOG.md` (one section per version) and start filling it from `0.1.0-beta.2`
+- [ ] Add `CHANGELOG.md` (one section per version) and start filling it from `0.1.0-beta.3`
 - [ ] Add the GitHub Action for publishing on Release (see the last section) once the first publish is proven; configure Trusted Publisher on npmjs.com
 - [ ] After feedback: release `0.1.0` stable and move `latest` to it. Right now `latest` still points to the beta
 - [ ] Optional: list on the MCP Registry and awesome-mcp-servers lists
@@ -230,3 +241,36 @@ If you use a token instead, add `env: NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}`
 - Never commit or publish API keys. The server reads `TESTRAIL_API_KEY` from the client's config only. Run `npm pack --dry-run` and read the file list.
 - Keep 2FA on. Do not use a classic "automation" token with full access; use a granular token or trusted publishing.
 - Every publish is public and permanent. Double-check the README and docs for internal URLs, company names or example data you don't want exposed.
+
+---
+
+## Publishing the next beta (short recipe)
+
+Example: `0.1.0-beta.2` → `0.1.0-beta.3`. Published versions can never be reused, so always bump first.
+
+1. **Bump the version** (both `package.json` and `package-lock.json`):
+   ```bash
+   npm version prerelease --preid beta --no-git-tag-version   # 0.1.0-beta.2 -> 0.1.0-beta.3
+   ```
+   Or edit `"version"` by hand in both files.
+2. **Commit and push**, open a PR into `main`, merge it, then `git checkout main && git pull`.
+3. **Check**:
+   ```bash
+   npm ci
+   npm test
+   npm run build
+   npm publish --dry-run --tag beta     # version must be right; files: index.js, dist/, README.md, docs/
+   ```
+4. **Log in** if needed: `npm whoami || npm login`.
+5. **Publish as a beta** (the `beta` tag keeps `latest` untouched):
+   ```bash
+   npm publish --access public --tag beta        # add --otp=123456 if npm asks for the 2FA code
+   ```
+6. **Verify**:
+   ```bash
+   npm view mcp-testrail-sync dist-tags          # beta: 0.1.0-beta.3
+   cd "$(mktemp -d)" && npx -y mcp-testrail-sync@beta --help
+   ```
+7. **Tag the release**: `git tag v0.1.0-beta.3 && git push origin v0.1.0-beta.3`.
+
+If you published without `--tag beta` by mistake, `latest` now points to the beta. Move it back: `npm dist-tag add mcp-testrail-sync@0.1.0-beta.1 latest`.
