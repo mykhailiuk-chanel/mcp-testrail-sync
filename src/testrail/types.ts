@@ -71,3 +71,100 @@ export interface CaseField {
     options: { is_required?: boolean; [key: string]: unknown };
   }[];
 }
+
+export interface Status {
+  id: number;
+  name: string;
+  label: string;
+  is_system?: boolean;
+  is_untested?: boolean;
+  is_final?: boolean;
+}
+
+/** A run (also used for runs nested in plan entries). Count fields: passed_count ... custom_status7_count. */
+export interface Run {
+  id: number;
+  name: string;
+  description?: string | null;
+  project_id?: number;
+  suite_id: number;
+  milestone_id?: number | null;
+  plan_id?: number | null;
+  config?: string | null;
+  assignedto_id?: number | null;
+  is_completed?: boolean;
+  created_on?: number;
+  created_by?: number;
+  completed_on?: number | null;
+  refs?: string | null;
+  url?: string;
+  [key: string]: unknown;
+}
+
+export interface PlanEntry {
+  id: string;
+  name: string;
+  suite_id: number;
+  runs?: Run[];
+}
+
+export interface Plan {
+  id: number;
+  name: string;
+  description?: string | null;
+  project_id?: number;
+  milestone_id?: number | null;
+  is_completed?: boolean;
+  created_on?: number;
+  created_by?: number;
+  completed_on?: number | null;
+  url?: string;
+  entries?: PlanEntry[];
+  [key: string]: unknown;
+}
+
+export interface Milestone {
+  id: number;
+  name: string;
+  description?: string | null;
+  project_id?: number;
+  parent_id?: number | null;
+  refs?: string | null;
+  start_on?: number | null;
+  started_on?: number | null;
+  due_on?: number | null;
+  completed_on?: number | null;
+  is_started?: boolean;
+  is_completed?: boolean;
+  url?: string;
+  milestones?: Milestone[];
+}
+
+/** A "test" in TestRail = a case inside a run. */
+export interface RunTest {
+  id: number;
+  case_id: number;
+  run_id: number;
+  status_id: number;
+  title: string;
+  assignedto_id?: number | null;
+  priority_id?: number;
+  type_id?: number;
+  estimate?: string | null;
+  refs?: string | null;
+  [key: string]: unknown;
+}
+
+export interface TestResult {
+  id: number;
+  test_id: number;
+  status_id: number | null;
+  comment?: string | null;
+  created_on?: number;
+  created_by?: number;
+  assignedto_id?: number | null;
+  elapsed?: string | null;
+  defects?: string | null;
+  version?: string | null;
+  [key: string]: unknown;
+}

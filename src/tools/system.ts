@@ -44,6 +44,7 @@ export function registerSystemTools(server: McpServer, ctx: AppContext, toolName
             : 'TestRail default',
           required_fields: scope.caseFormat.requiredFields,
         },
+        statuses: (await scope.getStatuses()).map((s) => ({ id: s.id, label: s.label })),
         tools: toolNames(),
       };
     }),

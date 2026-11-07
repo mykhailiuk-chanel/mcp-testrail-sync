@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { AppContext } from './context.js';
 import { registerLabelTools } from './tools/labels.js';
+import { registerRunTools } from './tools/runs.js';
 import { registerSectionTools } from './tools/sections.js';
 import { registerSuiteTools } from './tools/suites.js';
 import { registerSystemTools } from './tools/system.js';
@@ -10,7 +11,9 @@ export const SERVER_INSTRUCTIONS =
   'TestRail MCP server locked to ONE project and ONE suite (see system_ping). ' +
   'Hierarchy: suite > sections > subsections > test cases. ' +
   'Typical flow to add cases: suites_search or sections_list to find the section_id (sections_create if it does not exist), ' +
-  'tests_search to avoid duplicates, then tests_create with a batch of cases. Updates and deletes are not available.';
+  'tests_search to avoid duplicates, then tests_create with a batch of cases. ' +
+  'Progress reports (read-only): runs_list returns every run (standalone and in plans) with pass/fail/blocked counts and totals, filtered by a from/to date window, state and milestone, ' +
+  'with group_by="milestone" for a progress table; runs_get lists the failing tests of one run; milestones_list lists milestones. Runs are filtered to the configured suite. Updates and deletes are not available.';
 
 /** Builds the MCP server and registers every tool. Kept separate from cli.ts so tests can create it without stdio. */
 export function createServer(ctx: AppContext): McpServer {
@@ -32,6 +35,7 @@ export function createServer(ctx: AppContext): McpServer {
   registerLabelTools(server, ctx);
   registerSectionTools(server, ctx);
   registerSuiteTools(server, ctx);
+  registerRunTools(server, ctx);
 
   return server;
 }

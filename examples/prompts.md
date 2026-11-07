@@ -22,3 +22,11 @@ Copy these into Claude / Copilot / Codex / OpenCode once the server is connected
 - Name the section in the prompt. The AI finds its id with `suites_search`, or creates it with `sections_create`.
 - Ask it to *"check for duplicates first"* so it runs `tests_search` before `tests_create`.
 - If creation fails on a required field, ask: *"Which fields are required? (system_ping)"*.
+
+## Progress reports
+
+- "List all runs that were open or completed between 2026-11-01 and 2026-11-30 with pass/fail numbers."
+- "Progress table of all open milestones: runs, passed, failed, blocked, untested."
+- "Which runs in milestone 'Release 1.0' are still in progress? Show totals."
+- "How is run R123 going? List the failed tests with their comments and defects."
+- "Build a sprint report for 2026-11-01..2026-11-14 from the runs and the failing tests."

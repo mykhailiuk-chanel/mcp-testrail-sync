@@ -34,6 +34,7 @@ const MAX_PAGES = 40; // safety stop: 10,000 rows
  * Thin TestRail API v2 client.
  *
  * SAFETY: by design this client only knows how to GET and to call `add_case` / `add_section`.
+ * Runs, plans, milestones and results are read-only.
  * There is no update or delete method, so no tool can change or remove existing records.
  */
 export class TestRailClient {
@@ -71,18 +72,30 @@ export class TestRailClient {
 
   /** Follows `_links.next` and returns all rows of `key` (e.g. "cases", "sections"). Also accepts legacy plain arrays. */
   async getAll<T = unknown>(endpoint: string, key: string, query: Query = {}): Promise<T[]> {
+    return (await this.getAllChecked<T>(endpoint, key, query)).rows;
+  }
+
+  /** Like getAll, but also says whether the safety stop (MAX_PAGES) cut the list short. */
+  async getAllChecked<T = unknown>(endpoint: string, key: string, query: Query = {}): Promise<{ rows: T[]; truncated: boolean }> {
     const rows: T[] = [];
     let offset = 0;
     for (let page = 0; page < MAX_PAGES; page++) {
       const res = await this.get<Paginated | T[]>(endpoint, { ...query, limit: PAGE_LIMIT, offset });
-      if (Array.isArray(res)) return res; // older TestRail versions return a bare array
+      if (Array.isArray(res)) return { rows: res, truncated: false }; // older TestRail versions return a bare array
       const batch = (res[key] as T[] | undefined) ?? [];
       rows.push(...batch);
-      if (!res._links?.next || batch.length === 0) return rows;
+      if (!res._links?.next || batch.length === 0) return { rows, truncated: false };
       offset += batch.length;
     }
     logger.warn(`getAll(${endpoint}) stopped after ${MAX_PAGES} pages`);
-    return rows;
+    return { rows, truncated: true };
+  }
+
+  /** One page of a paginated list. `hasMore` comes from `_links.next`; legacy bare arrays count as a single page. */
+  async getPage<T = unknown>(endpoint: string, key: string, query: Query, limit: number, offset: number) {
+    const res = await this.get<Paginated | T[]>(endpoint, { ...query, limit, offset });
+    if (Array.isArray(res)) return { rows: res, hasMore: false };
+    return { rows: ((res[key] as T[] | undefined) ?? []), hasMore: Boolean(res._links?.next) };
   }
 
   addCase<T = unknown>(sectionId: number, body: Record<string, unknown>): Promise<T> {

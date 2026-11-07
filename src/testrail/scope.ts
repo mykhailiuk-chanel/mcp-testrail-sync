@@ -1,7 +1,7 @@
 import type { Config } from '../config.js';
 import { logger } from '../logger.js';
 import type { TestRailClient } from './client.js';
-import type { CaseField, Project, Section, Suite, Template, TestCase } from './types.js';
+import type { CaseField, Project, Section, Status, Suite, Template, TestCase } from './types.js';
 
 /** Raised when a call tries to touch anything outside the configured project/suite. */
 export class ScopeError extends Error {
@@ -35,6 +35,7 @@ function matchByIdOrName<T extends { id: number; name: string }>(items: T[], wan
  */
 export class Scope {
   private sections: Section[] | null = null;
+  private statuses: Status[] | null = null;
 
   constructor(
     private readonly client: TestRailClient,
@@ -100,6 +101,30 @@ export class Scope {
       );
     }
     return found;
+  }
+
+  /** Result statuses (system + custom), cached for the session. */
+  async getStatuses(): Promise<Status[]> {
+    this.statuses ??= await this.client.getList<Status>('get_statuses', 'statuses');
+    return this.statuses;
+  }
+
+  /** Throws unless the run belongs to the configured project and suite. */
+  assertRunInScope(run: { id: number; suite_id: number; project_id?: number }): void {
+    if (run.project_id !== undefined && run.project_id !== this.project.id) {
+      throw new ScopeError(`Run R${run.id} belongs to another project (${run.project_id}); this server is limited to project "${this.project.name}" (${this.project.id}).`);
+    }
+    if (run.suite_id !== this.suite.id) {
+      throw new ScopeError(
+        `Run R${run.id} uses another suite (${run.suite_id}); this server is limited to suite "${this.suite.name}" (${this.suite.id}).`,
+      );
+    }
+  }
+
+  assertProjectScoped(kind: string, id: number, projectId: number | undefined): void {
+    if (projectId !== undefined && projectId !== this.project.id) {
+      throw new ScopeError(`${kind} ${id} belongs to another project (${projectId}); this server is limited to project "${this.project.name}" (${this.project.id}).`);
+    }
   }
 
   assertCaseInScope(testCase: TestCase): void {
